@@ -18,7 +18,7 @@ library("ggplot2")
 ## read files
 for (m in c("cwatm_", "matsiro_", "clm45_", "lpjml_", "pcr-globwb_", "watergap2_", "h08_")) { # add more as they come
   for (gcms in c("hadgem2-es_", "ipsl-cm5a-lr_", "miroc5_")) {
-    if ((m == "clm45_" & gcms %in% c("ipsl-cm5a-lr_", "miroc5_")) | (m == "h08_" & gcms == "miroc5_")) {
+    if ((m == "clm45_" & gcms %in% c("ipsl-cm5a-lr_", "miroc5_"))) {
       next
     }
     if (gcms == "hadgem2-es_") {
@@ -47,15 +47,13 @@ for (m in c("cwatm_", "matsiro_", "clm45_", "lpjml_", "pcr-globwb_", "watergap2_
     }
   }
 }
-
 rm(temp)
-
 
 #### aggregate
 non_agg <- 
-agg_data %>% group_by(model, gcm, indice) %>% summarise(n = n(),
-                                                        n_pos = sum(to_save >= 0.05, na.rm = TRUE),
-                                                        n_na = sum(is.na(to_save)))
+agg_data %>% group_by(model, gcm, indice) %>% summarise(n    = n(),
+                                                      n_pos = sum(to_save >= 0.05, na.rm = TRUE),
+                                                      n_na  = sum(is.na(to_save)))
 non_agg$n_neg    <- (non_agg$n - non_agg$n_na) - non_agg$n_pos
 non_agg$cen_neg  <- non_agg$n_neg / (non_agg$n - non_agg$n_na) * 100
 non_agg$cen_pos  <- non_agg$n_pos / (non_agg$n - non_agg$n_na) * 100
@@ -90,15 +88,15 @@ agg_data %>% group_by(id, indice) %>% summarise(n = n(),
 grid_cell
 ## test
 a <- grid_cell %>% filter(indice == "max")
-
 a$lon <- rep(seq(-179.75, by = 0.5, length.out = 720), times = 360)
 a$lat <- rep(seq(89.75, by = -0.5, length.out = 360), each = 720)
 
-g <- ggplot(a %>% filter(n_na != 18))
-g + geom_tile(aes(x = lon, y = lat, fill = n_neg))
+#g <- ggplot(a %>% filter(n_na != 18))
+#g + geom_tile(aes(x = lon, y = lat, fill = n_neg))
 
 # save independaently
 write_csv(a, "./../OUT/grid_cells_max.csv")
+
 a <- grid_cell %>% filter(indice == "min")
 a$lon <- rep(seq(-179.75, by = 0.5, length.out = 720), times = 360) ; a$lat <- rep(seq(89.75, by = -0.5, length.out = 360), each = 720)
 write_csv(a, "./../OUT/grid_cells_min.csv")

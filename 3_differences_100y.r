@@ -13,7 +13,7 @@ suppressMessages(library("dplyr"))
 ## Read data
 for (m in c("cwatm_", "matsiro_", "clm45_", "lpjml_", "pcr-globwb_", "watergap2_", "h08_")) { # add more as they come
   for (gcms in c("hadgem2-es_", "ipsl-cm5a-lr_", "miroc5_")) {
-    if ((m == "clm45_" & gcms %in% c("ipsl-cm5a-lr_", "miroc5_")) | (m == "h08_" & gcms == "miroc5_")) {
+    if ((m == "clm45_" & gcms %in% c("ipsl-cm5a-lr_", "miroc5_"))) {
       next
     }
     if (gcms == "hadgem2-es_") {
