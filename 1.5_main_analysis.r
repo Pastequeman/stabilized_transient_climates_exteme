@@ -1,9 +1,11 @@
 #!/usr/bin/env Rscript
+
 args = commandArgs(trailingOnly = TRUE)
 
 ## Purpose:
 # for two 30-year period, compute extreme indices
-# for discharge and check whereas they are different
+# Thene instead of checking all series
+# check 95th percentile (influence on gumbel fitting)
 # at each grid cells
 # use directly the netcdf files
 #
@@ -34,12 +36,10 @@ if (length(args) != 9) {
   PERMUTATION <- args[9]
 }
 
-
 ## Libraries
 library("ncdf4")
 library("readr")
 suppressMessages(library("dplyr"))
-
 
 ## The matrix storing storing the extreme indices
 outputs <- list(max_dis_v1 = matrix(data = 0, nrow = 30, ncol = 259200),
@@ -53,9 +53,11 @@ outputs <- list(max_dis_v1 = matrix(data = 0, nrow = 30, ncol = 259200),
                 )
 #
 leap_years <- c(1664, 1668, 1672, 1676, 1680, 1684, 1688, 1692, 1696, 1704, 1708, 1712, 1716, 1720, 1724, 1728, 1732, 1736, 1740, 1744, 1748, 1752, 1756, 1760, 1764, 1768, 1772, 1776, 1780, 1784, 1788, 1792, 1796, 1804, 1808, 1812, 1816, 1820, 1824, 1828, 1832, 1836, 1840, 1844, 1848, 1852, 1856, 1860, 1864, 1868, 1872, 1876, 1880, 1884, 1888, 1892, 1896, 1904, 1908, 1912, 1916, 1920, 1924, 1928, 1932, 1936, 1940, 1944, 1948, 1952, 1956, 1960, 1964, 1968, 1972, 1976, 1980, 1984, 1988, 1992, 1996, 2000, 2004, 2008, 2012, 2016, 2020, 2024, 2028, 2032, 2036, 2040, 2044, 2048, 2052, 2056, 2060, 2064, 2068, 2072, 2076, 2080, 2084, 2088, 2092, 2096, 2104, 2108, 2112, 2116, 2120, 2124, 2128, 2132, 2136, 2140, 2144, 2148, 2152, 2156, 2160, 2164, 2168, 2172, 2176, 2180, 2184, 2188, 2192, 2196, 2204, 2208, 2212, 2216, 2220, 2224, 2228, 2232, 2236, 2240, 2244, 2248, 2252, 2256, 2260, 2264, 2268, 2272, 2276, 2280, 2284, 2288, 2292, 2296)
+
 out_var <- c("max", "p05", "min", "p95", "max", "p05", "min", "p95")
 ## read the files
 PERIOD <- 0
+
 for (EXP in EXPERIMENTS) {
   PERIOD <- PERIOD + 1
   #count <- 1
@@ -153,49 +155,28 @@ rm(cc) ; rm(temp) ; rm(PP) ; rm(PERIOD)
 
 ##### part 2: inference and fitting #####    ## the 30 extrema data for both sets are loaded
 for (i in 1:4) {
-  to_save <- sapply(1:ncol(outputs[[i]]), function(j) { if ( sum(is.na(outputs[[i]][,j])) > 25 | sum(is.na(outputs[[(i+4)]][,j])) > 25) {NA} else {ks.test(outputs[[i]][,j], outputs[[(i+4)]][,j])$p.value} })
-  # pool all data together, randomly split 1000 time and get the t interval
-  pooled <- rbind(outputs[[i]], outputs[[i+4]])
-  estimates <- matrix(nrow = 100, ncol = 259200)
-  for (k in 1:100) {
-    picked <- sample(seq(1:60), 30)
-    #save it
-    estimates[k,] <- sapply(1:ncol(pooled), function(j) { if ( sum(is.na(pooled[picked,j])) > 25 | sum(is.na(pooled[-picked,j])) > 25) {NA} else {unname(ks.test(pooled[picked,j], pooled[-picked,j])$p.value)}})  
-  }
-  to_save <- as.data.frame(to_save)
-  to_save$low <- apply(estimates, 2, function(x) quantile(x, 0.025, na.rm = TRUE))
-  to_save$hgh <- apply(estimates, 2, function(x) quantile(x, 0.975, na.rm = TRUE))
-  # save
-  write_csv(to_save, paste0("/data01/julien/projects/extreme_trans_stab/OUT/", casefold(MODEL), "_", GCM, "_",
-                 EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_",
-                 EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_",
-                 out_var[i], ".csv"))
-}
-rm(to_save) ; rm(pooled) ; rm(estimates3)
+  to_save <- sapply(1:ncol(outputs[[i]]), function(j) { if ( sum(is.na(outputs[[i]][,j])) > 25 | sum(is.na(outputs[[(i+4)]][,j])) > 25) {NA} else {quantile(outputs[[i]][,j], 0.975, na.rm = TRUE) - quantile(outputs[[(i+4)]][,j], 0.975, na.rm = TRUE)} })
 
-
-#### Gumbel fitting
-for (i in 1:8) {
-  outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(x, na.last = TRUE))
-  # fit L-moment
-  M1 <- apply(outputs[[i]], 2, function(x) if (sum(is.na(x)) >= 25) {NA} else {mean(x, na.rm = TRUE)})
-  M2 <- apply(outputs[[i]], 2, function(x) if (sum(is.na(x)) >= 25) {NA} else {1 / 30 * sum((seq(1, 30, 1) - 1) / (30 - 1) * x)})
-  L1 <- M1
-  L2 <- 2 * M2 - M1
-  
-  alpha   <- L2 / log(2)
-  epsilon <- L1 - alpha * 0.57721
-  Y100_ext   <- epsilon - alpha * log(-log(1 - 1/100))
-  # save
-  if (i < 5) {
-    write_csv(data.frame(alpha = alpha,espilon = epsilon,y100 = Y100_ext),
-              paste0("/data01/julien/projects/extreme_trans_stab/OUT/gumbel/", casefold(MODEL), "_", GCM, "_",
-                     EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_",
-                     out_var[i], ".csv"))      
+  if (PERMUTATION == "yes") {
+    # pool all data together, randomly split 1000 time and get the t interval
+    pooled <- rbind(outputs[[i]], outputs[[i+4]])
+    estimates <- matrix(nrow = 100, ncol = 259200)
+    for (k in 1:100) {
+      picked <- sample(seq(1:60), 30)
+      #save it
+      estimates[k,] <- sapply(1:ncol(pooled), function(j) { if ( sum(is.na(pooled[picked,j])) > 25 | sum(is.na(pooled[-picked,j])) > 25) {NA} else {quantile(pooled[picked,j], 0.975, na.rm = TRUE) - quantile(pooled[-picked,j], 0.975, na.rm = TRUE)}})  
+    }
+    to_save <- as.data.frame(to_save)
+    to_save$low <- apply(estimates, 2, function(x) quantile(x, 0.025, na.rm = TRUE))
+    to_save$hgh <- apply(estimates, 2, function(x) quantile(x, 0.975, na.rm = TRUE))
   } else {
-      write_csv(data.frame(alpha = alpha,espilon = epsilon,y100 = Y100_ext),
-            paste0("/data01/julien/projects/extreme_trans_stab/OUT/gumbel/", casefold(MODEL), "_", GCM, "_",
-                   EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_",
-                   out_var[i], ".csv"))  
+    to_save <- as.data.frame(to_save)
   }
-}
+  
+  # save
+  write_csv(to_save, paste0("/data01/julien/projects/extreme_trans_stab/OUT/high_value_", casefold(MODEL), "_", GCM, "_",
+                            EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_",
+                            EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_",
+                            out_var[i], ".csv"))
+} # all indices 
+rm(to_save) ; rm(pooled) ; rm(estimates)

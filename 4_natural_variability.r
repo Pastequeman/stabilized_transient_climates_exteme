@@ -19,9 +19,12 @@ for (sec in 1:8) {
         next
       }
       # now the different pi sets
-      for (i in c("pi12", "pi13", "pi14", "pi15")) { # !! Add remaining later
-        if (i == "pi12") {
-          if (m == "matsuro_" & gcms == "hadgem2-es_") { next }
+      for (pi in c("pi12", "pi13", "pi14", "pi15")) { # !! Add remaining later
+        # skip for this conmbination
+        if (m == "matsiro_" & gcms == "hadgem2-es_" & pi %in% c("pi12", "pi13", "pi14", "pi15")) { next }
+
+        # proceed
+        if (pi == "pi12") {
           period1 <- "1661-1690"
           period2 <- "1691-1720"
         } else if (pi == "pi13") {
@@ -44,6 +47,7 @@ for (sec in 1:8) {
           temp$id     <- seq(1,259200)
           temp$indice <- id
           temp$model  <- m
+          temp$period <- pi
           temp$gcm    <- gcms
           temp <- temp[sections[sec]:sections[(sec+1)], ] ## keep only subset to save memmory
 
@@ -61,7 +65,7 @@ for (sec in 1:8) {
   rm(temp)
   # analyis start, here no aggregation yet
   non_agg <- 
-    agg_data %>% group_by(model, gcm, indice) %>% summarise(n    = n(),
+    agg_data %>% group_by(model, gcm, indice, period) %>% summarise(n    = n(),
                                                           n_pos = sum(to_save >= 0.05, na.rm = TRUE),
                                                           n_na  = sum(is.na(to_save)))
   non_agg$n_neg    <- (non_agg$n - non_agg$n_na) - non_agg$n_pos
@@ -70,7 +74,7 @@ for (sec in 1:8) {
 
 
   # save and clean
-  write_csv(agg_model, paste0("./../OUT/picontrol_nonaggr_reg_", sec, ".csv"))
+  write_csv(non_agg, paste0("./../OUT/picontrol_nonaggr_reg_", sec, ".csv"))
   rm(non_agg)
 }  # regions
 
