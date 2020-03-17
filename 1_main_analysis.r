@@ -58,6 +58,43 @@ out_var <- c("max", "p05", "min", "p95", "max", "p05", "min", "p95")
 PERIOD <- 0
 for (EXP in EXPERIMENTS) {
   PERIOD <- PERIOD + 1
+
+  # if saved extreme indice already exist, skip
+  if (PERIOD == 1) {
+      
+    if (file.exists(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
+                             EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_", "max.bin"))) {
+      # load data and next
+      for (i in c("max", "p05", "min", "p95")) {
+        f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
+                               EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_", i, ".bin"), open = "rb")
+        for (j in 1:30) {
+          outputs[[which(i %in% c("max", "p05", "min", "p95"))]][j,] <- readBin(f_write, size = 4, what = "numeric", n = 259200, endian = "little")
+        }
+
+        close(f_write)
+      }
+      rm(i) ; rm(j) ; rm(f_write)
+      next
+    } 
+  } else {
+    if (file.exists(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
+                             EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_", "max.bin"))) {
+            # load data and next
+      for (i in c("max", "p05", "min", "p95")) {
+        f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
+                               EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_", i, ".bin"), open = "rb")
+        for (j in 1:30) {
+          outputs[[(4+which(i %in% c("max", "p05", "min", "p95")))]][j,] <- readBin(f_write, size = 4, what = "numeric", n = 259200, endian = "little")
+        }
+
+        close(f_write)
+      }
+      rm(i) ; rm(j) ; rm(f_write)
+      next
+    }    
+  }
+
   #count <- 1
   cc    <- 0
   PP    <- get(paste0("PERIOD_", PERIOD))
@@ -148,35 +185,70 @@ for (EXP in EXPERIMENTS) {
     }
     # carrefull ! the matrix are 720x360 (swapped)
   } # year loop
-}  # experiment loop
-rm(cc) ; rm(temp) ; rm(PP) ; rm(PERIOD)
+  # save indice to save time in th e future...
+  if (PERIOD == 1) {
+    for (i in c("max", "p05", "min", "p95")) {
+      f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
+                             EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_", i, ".bin"), open = "wb")
+      writeBin(as.vector(t(outputs[[which(i %in% c("max", "p05", "min", "p95"))]])), f_write, size = 4, endian = "little")
+      close(f_write)
+    }
+  } else {
+    for (i in c("max", "p05", "min", "p95")) {
+      f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
+                             EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_", i, ".bin"), open = "wb")
+      writeBin(as.vector(t(outputs[[(4+which(i %in% c("max", "p05", "min", "p95")))]])), f_write, size = 4, endian = "little")
+      close(f_write)
+    }    
+  }
 
+}  # experiment loop
+rm(cc) ; rm(temp) ; rm(PP) ; rm(PERIOD) ; rm(i) ; rm(f_write)
+rm(years) ; rm(leap_years) ; rm(yrs_seq) ; rm(ini)
+rm(folder) ; rm(discharge) ; rm(days) ; rm(adj) ; rm(per_str) ; rm(soc)
 ##### part 2: inference and fitting #####    ## the 30 extrema data for both sets are loaded
 for (i in 1:4) {
-  to_save <- sapply(1:ncol(outputs[[i]]), function(j) { if ( sum(is.na(outputs[[i]][,j])) > 25 | sum(is.na(outputs[[(i+4)]][,j])) > 25) {NA} else {ks.test(outputs[[i]][,j], outputs[[(i+4)]][,j])$p.value} })
+  to_save <- sapply(1:ncol(outputs[[i]]), function(j) { if ( sum(is.na(outputs[[i]][,j])) > 25 | sum(is.na(outputs[[(i+4)]][,j])) > 25) {NA} else {unname(ks.test(outputs[[i]][,j], outputs[[(i+4)]][,j])$p.value)} })
+  to_save2 <- sapply(1:ncol(outputs[[i]]), function(j) { if ( sum(is.na(outputs[[i]][,j])) > 25 | sum(is.na(outputs[[(i+4)]][,j])) > 25) {NA} else {unname(ks.test(outputs[[i]][,j], outputs[[(i+4)]][,j])$statistic)} })
   # pool all data together, randomly split 1000 time and get the t interval
-  pooled <- rbind(outputs[[i]], outputs[[i+4]])
-  estimates <- matrix(nrow = 100, ncol = 259200)
-  for (k in 1:100) {
-    picked <- sample(seq(1:60), 30)
-    #save it
-    estimates[k,] <- sapply(1:ncol(pooled), function(j) { if ( sum(is.na(pooled[picked,j])) > 25 | sum(is.na(pooled[-picked,j])) > 25) {NA} else {unname(ks.test(pooled[picked,j], pooled[-picked,j])$p.value)}})  
+
+  if (PERMUTATION == "yes") {
+    pooled <- rbind(outputs[[i]], outputs[[i+4]])
+    estimates <- matrix(nrow = 100, ncol = 259200)
+    for (k in 1:100) {
+      print(k)       ##     DEBUG
+      picked <- sample(seq(1:60), 30)
+      #save it
+      estimates[k,] <- sapply(1:ncol(pooled), function(j) { if ( sum(is.na(pooled[picked,j])) > 25 | sum(is.na(pooled[-picked,j])) > 25) {NA}
+        else {unname(ks.test(pooled[picked,j], pooled[-picked,j])$statistic)}})  
+    } 
+    to_save <- as.data.frame(to_save)
+    to_save$stat <- to_save2
+    to_save$low <- apply(estimates, 2, function(x) quantile(x, 0.025, na.rm = TRUE))
+    to_save$hgh <- apply(estimates, 2, function(x) quantile(x, 0.975, na.rm = TRUE))   
+  } else {
+    to_save <- as.data.frame(to_save)
+    to_save$stat <- to_save2
   }
-  to_save <- as.data.frame(to_save)
-  to_save$low <- apply(estimates, 2, function(x) quantile(x, 0.025, na.rm = TRUE))
-  to_save$hgh <- apply(estimates, 2, function(x) quantile(x, 0.975, na.rm = TRUE))
+
   # save
   write_csv(to_save, paste0("/data01/julien/projects/extreme_trans_stab/OUT/", casefold(MODEL), "_", GCM, "_",
                  EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_",
                  EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_",
                  out_var[i], ".csv"))
-}
-rm(to_save) ; rm(pooled) ; rm(estimates3)
+} # indice loop
+rm(to_save) ; rm(pooled) ; rm(estimates) ; rm(to_save2)
 
 
 #### Gumbel fitting
 for (i in 1:8) {
-  outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(x, na.last = TRUE))
+  # carefull. low flow have to sort -x !
+  if (i %in% c(1, 3, 5, 7)) {
+    outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(x, na.last = TRUE))    
+  } else {
+    outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(-x, na.last = TRUE))
+  }
+
   # fit L-moment
   M1 <- apply(outputs[[i]], 2, function(x) if (sum(is.na(x)) >= 25) {NA} else {mean(x, na.rm = TRUE)})
   M2 <- apply(outputs[[i]], 2, function(x) if (sum(is.na(x)) >= 25) {NA} else {1 / 30 * sum((seq(1, 30, 1) - 1) / (30 - 1) * x)})
