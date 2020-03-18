@@ -17,6 +17,7 @@ suppressMessages(library("dplyr"))
 
 ## read files
 for (m in c("cwatm_", "matsiro_", "clm45_", "lpjml_", "pcr-globwb_", "watergap2_", "h08_")) { # add more as they come
+  print(m) ## DEBUG
   for (gcms in c("hadgem2-es_", "ipsl-cm5a-lr_", "miroc5_")) {
     if ((m == "clm45_" & gcms %in% c("ipsl-cm5a-lr_", "miroc5_"))) {
       next
@@ -34,6 +35,7 @@ for (m in c("cwatm_", "matsiro_", "clm45_", "lpjml_", "pcr-globwb_", "watergap2_
     for (id in c("max", "min", "p05", "p95")) {
       temp <- read_csv(paste0("/data01/julien/projects/extreme_trans_stab/OUT/", m, gcms, "rcp26_",
                               period1, "_rcp26_", period2, "_", id, ".csv"), col_types = cols(to_save = col_double(),
+                                                                                              stat = col_double(),
                                                                                               low = col_double(),
                                                                                               hgh = col_double()))
       temp$id     <- seq(1,259200)
@@ -56,7 +58,7 @@ non_agg <-
 agg_data %>% group_by(model, gcm, indice) %>% summarise(n    = n(),
                                                       n_pos = sum(to_save <= 0.05, na.rm = TRUE),
                                                       n_na  = sum(is.na(to_save)),
-                                                      n_pos2 = sum(to_save < low | to_save > hgh, na.rm = TRUE))
+                                                      n_pos2 = sum(stat < low | stat > hgh, na.rm = TRUE))
 non_agg$n_neg    <- (non_agg$n - non_agg$n_na) - non_agg$n_pos
 non_agg$cen_neg  <- non_agg$n_neg / (non_agg$n - non_agg$n_na) * 100
 non_agg$cen_pos  <- non_agg$n_pos / (non_agg$n - non_agg$n_na) * 100
@@ -111,13 +113,12 @@ agg_data %>% group_by(id, indice) %>% summarise(n = n(),
                                                 n_sup = sum(to_save >= 0.05, na.rm = TRUE),
                                                 n_na = sum(is.na(to_save)),
                                                 n_neg = sum(to_save < 0.05, na.rm = TRUE),
-                                                n_sup2 = sum(to_save <= hgh & to_save >= low , na.rm = TRUE),
-                                                n_neg2 = sum(to_save > hgh | to_save < low, na.rm = TRUE))
+                                                n_sup2 = sum(stat <= hgh & stat >= low , na.rm = TRUE),
+                                                n_neg2 = sum(stat > hgh | stat < low, na.rm = TRUE))
 grid_cell
 ## test
 a <- grid_cell %>% filter(indice == "max")
-a$lon <- rep(seq(-179.75, by = 0.5, length.out = 720), times = 360)
-a$lat <- rep(seq(89.75, by = -0.5, length.out = 360), each = 720)
+a$lon <- rep(seq(-179.75, by = 0.5, length.out = 720), times = 360) ; a$lat <- rep(seq(89.75, by = -0.5, length.out = 360), each = 720)
 
 #g <- ggplot(a %>% filter(n_na != 18))
 #g + geom_tile(aes(x = lon, y = lat, fill = n_neg))
@@ -145,8 +146,8 @@ agg_data %>% group_by(id, indice, gcm) %>% summarise(n = n(),
                                                 n_sup = sum(to_save >= 0.05, na.rm = TRUE),
                                                 n_na = sum(is.na(to_save)),
                                                 n_neg = sum(to_save < 0.05, na.rm = TRUE),
-                                                n_sup2 = sum(to_save <= hgh & to_save >= low , na.rm = TRUE),
-                                                n_neg2 = sum(to_save > hgh | to_save < low, na.rm = TRUE))
+                                                n_sup2 = sum(stat <= hgh & stat >= low , na.rm = TRUE),
+                                                n_neg2 = sum(stat > hgh | stat < low, na.rm = TRUE))
 write_csv(grid_cell, "./../OUT/grid_cells_gcms_all_ind.csv")
 
 # models
@@ -155,6 +156,6 @@ agg_data %>% group_by(id, indice, model) %>% summarise(n = n(),
                                                 n_sup = sum(to_save >= 0.05, na.rm = TRUE),
                                                 n_na = sum(is.na(to_save)),
                                                 n_neg = sum(to_save < 0.05, na.rm = TRUE),
-                                                n_sup2 = sum(to_save <= hgh & to_save >= low , na.rm = TRUE),
-                                                n_neg2 = sum(to_save > hgh | to_save < low, na.rm = TRUE))
+                                                n_sup2 = sum(stat <= hgh & stat >= low , na.rm = TRUE),
+                                                n_neg2 = sum(stat > hgh | stat < low, na.rm = TRUE))
 write_csv(grid_cell, "./../OUT/grid_cells_models_all_ind.csv")

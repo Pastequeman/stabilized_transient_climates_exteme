@@ -69,7 +69,7 @@ for (EXP in EXPERIMENTS) {
         f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
                                EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_", i, ".bin"), open = "rb")
         for (j in 1:30) {
-          outputs[[which(i %in% c("max", "p05", "min", "p95"))]][j,] <- readBin(f_write, size = 4, what = "numeric", n = 259200, endian = "little")
+          outputs[[which(i == c("max", "p05", "min", "p95"))]][j,] <- readBin(f_write, size = 4, what = "numeric", n = 259200, endian = "little")
         }
 
         close(f_write)
@@ -85,7 +85,7 @@ for (EXP in EXPERIMENTS) {
         f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
                                EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_", i, ".bin"), open = "rb")
         for (j in 1:30) {
-          outputs[[(4+which(i %in% c("max", "p05", "min", "p95")))]][j,] <- readBin(f_write, size = 4, what = "numeric", n = 259200, endian = "little")
+          outputs[[(4+which(i == c("max", "p05", "min", "p95")))]][j,] <- readBin(f_write, size = 4, what = "numeric", n = 259200, endian = "little")
         }
 
         close(f_write)
@@ -243,7 +243,7 @@ rm(to_save) ; rm(pooled) ; rm(estimates) ; rm(to_save2)
 #### Gumbel fitting
 for (i in 1:8) {
   # carefull. low flow have to sort -x !
-  if (i %in% c(1, 3, 5, 7)) {
+  if (i %in% c(1, 2, 5, 6)) {
     outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(x, na.last = TRUE))    
   } else {
     outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(-x, na.last = TRUE))

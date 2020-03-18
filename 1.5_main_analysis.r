@@ -61,6 +61,41 @@ PERIOD <- 0
 for (EXP in EXPERIMENTS) {
   PERIOD <- PERIOD + 1
   #count <- 1
+  # if bin file exist just load it
+  if (PERIOD == 1) {
+    if (file.exists(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
+                           EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_", "max.bin"))) {
+      # load data and next
+      for (i in c("max", "p05", "min", "p95")) {
+        f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
+                               EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_", i, ".bin"), open = "rb")
+        for (j in 1:30) {
+          outputs[[which(i == c("max", "p05", "min", "p95"))]][j,] <- readBin(f_write, size = 4, what = "numeric", n = 259200, endian = "little")
+        }
+        
+        close(f_write)
+      }
+      rm(i) ; rm(j) ; rm(f_write)
+      next
+    } 
+  } else {
+    if (file.exists(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
+                           EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_", "max.bin"))) {
+      # load data and next
+      for (i in c("max", "p05", "min", "p95")) {
+        f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
+                               EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_", i, ".bin"), open = "rb")
+        for (j in 1:30) {
+          outputs[[(4+which(i == c("max", "p05", "min", "p95")))]][j,] <- readBin(f_write, size = 4, what = "numeric", n = 259200, endian = "little")
+        }
+        
+        close(f_write)
+      }
+      rm(i) ; rm(j) ; rm(f_write)
+      next
+    }    
+  }
+  
   cc    <- 0
   PP    <- get(paste0("PERIOD_", PERIOD))
   temp  <- matrix(data = 0, nrow = 30, ncol = 259200)
@@ -151,20 +186,27 @@ for (EXP in EXPERIMENTS) {
     # carrefull ! the matrix are 720x360 (swapped)
   } # year loop
 }  # experiment loop
-rm(cc) ; rm(temp) ; rm(PP) ; rm(PERIOD)
-
+#rm(cc) ; rm(temp) ; rm(PP) ; rm(PERIOD)
+#rm(years) ; rm(leap_years) ; rm(yrs_seq) ; rm(ini)
+#rm(folder) ; rm(discharge) ; rm(days) ; rm(adj) ; rm(per_str) ; rm(soc)
 ##### part 2: inference and fitting #####    ## the 30 extrema data for both sets are loaded
 for (i in 1:4) {
-  to_save <- sapply(1:ncol(outputs[[i]]), function(j) { if ( sum(is.na(outputs[[i]][,j])) > 25 | sum(is.na(outputs[[(i+4)]][,j])) > 25) {NA} else {quantile(outputs[[i]][,j], 0.975, na.rm = TRUE) - quantile(outputs[[(i+4)]][,j], 0.975, na.rm = TRUE)} })
+  if (i %in% c(1, 2)) {
+    target <- 0.95
+  } else {
+    target <- 0.05
+  }
+  to_save <- sapply(1:ncol(outputs[[i]]), function(j) { if ( sum(is.na(outputs[[i]][,j])) > 25 | sum(!is.finite(outputs[[i]][,j])) > 25 | sum(is.na(outputs[[(i+4)]][,j])) > 25 | sum(!is.finite(outputs[[(i+4)]][,j])) > 25) {NA} else {quantile(outputs[[i]][,j], target, na.rm = TRUE) - quantile(outputs[[(i+4)]][,j], target, na.rm = TRUE)} })
 
   if (PERMUTATION == "yes") {
     # pool all data together, randomly split 1000 time and get the t interval
     pooled <- rbind(outputs[[i]], outputs[[i+4]])
     estimates <- matrix(nrow = 100, ncol = 259200)
     for (k in 1:100) {
+      #print(k) ## DEBUG
       picked <- sample(seq(1:60), 30)
       #save it
-      estimates[k,] <- sapply(1:ncol(pooled), function(j) { if ( sum(is.na(pooled[picked,j])) > 25 | sum(is.na(pooled[-picked,j])) > 25) {NA} else {quantile(pooled[picked,j], 0.975, na.rm = TRUE) - quantile(pooled[-picked,j], 0.975, na.rm = TRUE)}})  
+      estimates[k,] <- sapply(1:ncol(pooled), function(j) { if ( sum(is.na(pooled[picked,j])) > 25 | sum(!is.finite(pooled[picked,j])) > 25 | sum(is.na(pooled[-picked,j])) > 25 | sum(!is.finite(pooled[-picked,j]))) {NA} else {quantile(pooled[picked,j], target, na.rm = TRUE) - quantile(pooled[-picked,j], target, na.rm = TRUE)}})  
     }
     to_save <- as.data.frame(to_save)
     to_save$low <- apply(estimates, 2, function(x) quantile(x, 0.025, na.rm = TRUE))
