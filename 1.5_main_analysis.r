@@ -185,6 +185,23 @@ for (EXP in EXPERIMENTS) {
     }
     # carrefull ! the matrix are 720x360 (swapped)
   } # year loop
+  # save indice to save time
+  if (PERIOD == 1) {
+    for (i in c("max", "p05", "min", "p95")) {
+      f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
+                             EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_", i, ".bin"), open = "wb")
+      writeBin(as.vector(t(outputs[[which(i %in% c("max", "p05", "min", "p95"))]])), f_write, size = 4, endian = "little")
+      close(f_write)
+    }
+  } else {
+    for (i in c("max", "p05", "min", "p95")) {
+      f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
+                             EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_", i, ".bin"), open = "wb")
+      writeBin(as.vector(t(outputs[[(4+which(i %in% c("max", "p05", "min", "p95")))]])), f_write, size = 4, endian = "little")
+      close(f_write)
+    }    
+  }
+  # end save bin files
 }  # experiment loop
 #rm(cc) ; rm(temp) ; rm(PP) ; rm(PERIOD)
 #rm(years) ; rm(leap_years) ; rm(yrs_seq) ; rm(ini)

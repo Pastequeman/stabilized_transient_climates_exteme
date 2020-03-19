@@ -216,7 +216,7 @@ for (i in 1:4) {
     pooled <- rbind(outputs[[i]], outputs[[i+4]])
     estimates <- matrix(nrow = 100, ncol = 259200)
     for (k in 1:100) {
-      print(k)       ##     DEBUG
+      #print(k)       ##     DEBUG
       picked <- sample(seq(1:60), 30)
       #save it
       estimates[k,] <- sapply(1:ncol(pooled), function(j) { if ( sum(is.na(pooled[picked,j])) > 25 | sum(is.na(pooled[-picked,j])) > 25) {NA}
