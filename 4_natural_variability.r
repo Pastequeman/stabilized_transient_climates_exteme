@@ -52,7 +52,7 @@ for (sec in 1:8) {
           temp <- temp[sections[sec]:sections[(sec+1)], ] ## keep only subset to save memmory
 
 
-          if (gcms == "hadgem2-es_" & m == "cwatm_" & id == "max") {
+          if (gcms == "hadgem2-es_" & m == "cwatm_" & id == "max", pi == "pi12") {
             agg_data <- temp
           } else {
             agg_data <- rbind(agg_data, temp)
@@ -77,5 +77,3 @@ for (sec in 1:8) {
   write_csv(non_agg, paste0("./../OUT/picontrol_nonaggr_reg_", sec, ".csv"))
   rm(non_agg)
 }  # regions
-
-
