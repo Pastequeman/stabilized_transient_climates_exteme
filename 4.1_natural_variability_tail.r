@@ -3,15 +3,15 @@ args = commandArgs(trailingOnly = TRUE)
 
 ## Purpose:
 # Assess the influence of natural variability on the detection of significance between 
-# extreme indice for two periods
+# Extreme indice for two periods
 
 ## Libraries
 library("readr")
 suppressMessages(library("dplyr"))
 
 ## Read files. Since there are a lot of combinations it is safer to split the files > I made 8 regions
-sections <- c(1, 32400, 64800, 97200, 129600, 162000, 194400, 226800, 259200)
-
+sections <- c(0, 32399, 64799, 97199, 129599, 161999, 194399, 226799, 259200)
+#sections <- c(1, 32400, 64800, 97200, 129600, 162000, 194400, 226800, 259200)
 for (sec in 1:8) {
   for (m in c("cwatm_", "matsiro_", "clm45_", "lpjml_", "pcr-globwb_", "watergap2_", "h08_")) { # add more as they come
     for (gcms in c("hadgem2-es_", "ipsl-cm5a-lr_", "miroc5_")) {
@@ -51,10 +51,10 @@ for (sec in 1:8) {
           temp$model  <- m
           temp$period <- pi
           temp$gcm    <- gcms
-          temp <- temp[sections[sec]:sections[(sec+1)], ] ## keep only subset to save memmory
+          temp <- temp[(sections[sec]+1):sections[(sec+1)], ] ## keep only subset to save memmory
 
 
-          if (gcms == "hadgem2-es_" & m == "cwatm_" & id == "max", pi == "pi12") {
+          if (gcms == "hadgem2-es_" & m == "cwatm_" & id == "max" & pi == "pi12") {
             agg_data <- temp
           } else {
             agg_data <- rbind(agg_data, temp)
@@ -68,7 +68,7 @@ for (sec in 1:8) {
   # analyis start, here no aggregation yet
   non_agg <- 
     agg_data %>% group_by(model, gcm, indice, period) %>% summarise(n    = n(),
-                                                          n_pos = sum(to_save >= 0.05, na.rm = TRUE),
+                                                          n_pos = sum(to_save < low | to_save > hgh, na.rm = TRUE),
                                                           n_na  = sum(is.na(to_save)))
   non_agg$n_neg    <- (non_agg$n - non_agg$n_na) - non_agg$n_pos
   non_agg$cen_neg  <- non_agg$n_neg / (non_agg$n - non_agg$n_na) * 100
@@ -76,6 +76,6 @@ for (sec in 1:8) {
 
 
   # save and clean
-  write_csv(non_agg, paste0("./../OUT/picontrol_nonaggr_reg_", sec, "tail.csv"))
+  write_csv(non_agg, paste0("./../OUT/picontrol_nonaggr_reg_", sec, "_tail.csv"))
   rm(non_agg)
 }  # regions

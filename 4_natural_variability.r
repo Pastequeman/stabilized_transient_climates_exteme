@@ -10,7 +10,7 @@ library("readr")
 suppressMessages(library("dplyr"))
 
 ## Read files. Since there are a lot of combinations it is safer to split the files > I made 8 regions
-sections <- c(1, 32400, 64800, 97200, 129600, 162000, 194400, 226800, 259200)
+sections <- c(0, 32399, 64799, 97199, 129599, 161999, 194399, 226799, 259200)
 
 for (sec in 1:8) {
   for (m in c("cwatm_", "matsiro_", "clm45_", "lpjml_", "pcr-globwb_", "watergap2_", "h08_")) { # add more as they come
@@ -52,7 +52,7 @@ for (sec in 1:8) {
           temp <- temp[sections[sec]:sections[(sec+1)], ] ## keep only subset to save memmory
 
 
-          if (gcms == "hadgem2-es_" & m == "cwatm_" & id == "max", pi == "pi12") {
+          if (gcms == "hadgem2-es_" & m == "cwatm_" & id == "max" & pi == "pi12") {
             agg_data <- temp
           } else {
             agg_data <- rbind(agg_data, temp)
