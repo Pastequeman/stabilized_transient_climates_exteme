@@ -61,7 +61,7 @@ non_agg$cen_pos <- non_agg$n_pos / (non_agg$n - non_agg$n_na) * 100  # ok
 
 non_agg
 
-write_csv(non_agg, "./../OUT/trans_vs_stab_non_aggregated_tail.csv")
+write_csv(non_agg, "./../OUT/process/trans_vs_stab_non_aggregated_tail.csv")
 
 ### aggregate (all)
 to_save <- non_agg %>% group_by(indice) %>% summarise(ave_cen_neg  = mean(cen_neg, na.rm = TRUE),
@@ -69,14 +69,14 @@ to_save <- non_agg %>% group_by(indice) %>% summarise(ave_cen_neg  = mean(cen_ne
                                                     sd_cen_neg  = sd(cen_neg, na.rm = TRUE),
                                                     sd_cen_pos  = sd(cen_pos, na.rm = TRUE))
 to_save
-write_csv(to_save, "./../OUT/condenced_table_tail.csv") ; rm(to_save)
+write_csv(to_save, "./../OUT/process/condenced_table_tail.csv") ; rm(to_save)
 # model based
 agg_model <- 
 non_agg %>% group_by(indice, model) %>% summarise(ave_cen_neg  = mean(cen_neg, na.rm = TRUE),
                                                   ave_cen_pos = mean(cen_pos, na.rm = TRUE),
                                                   sd_cen_neg  = sd(cen_neg, na.rm = TRUE),
                                                   sd_cen_pos  = sd(cen_pos, na.rm = TRUE))
-write_csv(agg_model, "./../OUT/trans_vs_stab_only_model_tail.csv")
+write_csv(agg_model, "./../OUT/process/trans_vs_stab_only_model_tail.csv")
 
 # GCM only
 agg_model <- 
@@ -84,7 +84,7 @@ non_agg %>% group_by(indice, gcm) %>% summarise(ave_cen_neg  = mean(cen_neg, na.
                                                 ave_cen_pos = mean(cen_pos, na.rm = TRUE),
                                                 sd_cen_neg  = sd(cen_neg, na.rm = TRUE),
                                                 sd_cen_pos  = sd(cen_pos, na.rm = TRUE))
-write_csv(agg_model, "./../OUT/trans_vs_stab_only_gcm_tail.csv")
+write_csv(agg_model, "./../OUT/process/trans_vs_stab_only_gcm_tail.csv")
 
 #### spatial distribution
 ## two things to look at:
@@ -98,19 +98,19 @@ grid_cell <- agg_data %>% group_by(id, indice) %>% summarise(n = n(), pos = sum(
 ## test
 a <- grid_cell %>% filter(indice == "max")
 a$lon <- rep(seq(-179.75, by = 0.5, length.out = 720), times = 360) ; a$lat <- rep(seq(89.75, by = -0.5, length.out = 360), each = 720)
-write_csv(a, "./../OUT/grid_cells_max_tail.csv")
+write_csv(a, "./../OUT/process/grid_cells_max_tail.csv")
 
 a <- grid_cell %>% filter(indice == "min")
 a$lon <- rep(seq(-179.75, by = 0.5, length.out = 720), times = 360) ; a$lat <- rep(seq(89.75, by = -0.5, length.out = 360), each = 720)
-write_csv(a, "./../OUT/grid_cells_min_tail.csv")
+write_csv(a, "./../OUT/process/grid_cells_min_tail.csv")
 
 a <- grid_cell %>% filter(indice == "p05")
 a$lon <- rep(seq(-179.75, by = 0.5, length.out = 720), times = 360) ; a$lat <- rep(seq(89.75, by = -0.5, length.out = 360), each = 720)
-write_csv(a, "./../OUT/grid_cells_p05_tail.csv")
+write_csv(a, "./../OUT/process/grid_cells_p05_tail.csv")
 
 a <- grid_cell %>% filter(indice == "p95")
 a$lon <- rep(seq(-179.75, by = 0.5, length.out = 720), times = 360) ; a$lat <- rep(seq(89.75, by = -0.5, length.out = 360), each = 720)
-write_csv(a, "./../OUT/grid_cells_p95_tail.csv")
+write_csv(a, "./../OUT/process/grid_cells_p95_tail.csv")
 
 
 ## additional analysis to distinguish patterns
@@ -120,7 +120,7 @@ grid_cell <-
                                                        n_sup = sum(n_pos, na.rm = TRUE),
                                                        n_na = sum(is.na(to_save)),
                                                        n_neg = sum(n_neg, na.rm = TRUE))
-write_csv(grid_cell, "./../OUT/grid_cells_gcms_all_ind_tail.csv")
+write_csv(grid_cell, "./../OUT/process/grid_cells_gcms_all_ind_tail.csv")
 
 # models
 grid_cell <-
@@ -128,4 +128,4 @@ grid_cell <-
                                                        n_sup = sum(n_pos, na.rm = TRUE),
                                                        n_na = sum(is.na(to_save)),
                                                        n_neg = sum(n_neg, na.rm = TRUE))
-write_csv(grid_cell, "./../OUT/grid_cells_models_all_ind_tail.csv")
+write_csv(grid_cell, "./../OUT/process/grid_cells_models_all_ind_tail.csv")
