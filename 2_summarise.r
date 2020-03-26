@@ -68,7 +68,7 @@ non_agg$cen_pos2 <- non_agg$n_pos2 / (non_agg$n - non_agg$n_na) * 100
 
 non_agg
 
-write_csv(non_agg, "./../OUT/trans_vs_stab_non_aggregated.csv")
+write_csv(non_agg, "./../OUT/process/trans_vs_stab_non_aggregated.csv")
 
 ### aggregate (all)
 to_save <- non_agg %>% group_by(indice) %>% summarise(ave_cen_neg  = mean(cen_neg, na.rm = TRUE),
@@ -79,7 +79,7 @@ to_save <- non_agg %>% group_by(indice) %>% summarise(ave_cen_neg  = mean(cen_ne
                                                     ave_cen_pos2 = mean(cen_pos2, na.rm = TRUE),
                                                     sd_cen_neg2  = sd(cen_neg2, na.rm = TRUE),
                                                     sd_cen_pos2  = sd(cen_pos2, na.rm = TRUE))
-write_csv(to_save, "./../OUT/condenced_table.csv") ; rm(to_save)
+write_csv(to_save, "./../OUT/process/condenced_table.csv") ; rm(to_save)
 # model based
 agg_model <- 
 non_agg %>% group_by(indice, model) %>% summarise(ave_cen_neg  = mean(cen_neg, na.rm = TRUE),
@@ -90,7 +90,7 @@ non_agg %>% group_by(indice, model) %>% summarise(ave_cen_neg  = mean(cen_neg, n
                                                   ave_cen_pos2 = mean(cen_pos2, na.rm = TRUE),
                                                   sd_cen_neg2  = sd(cen_neg2, na.rm = TRUE),
                                                   sd_cen_pos2  = sd(cen_pos2, na.rm = TRUE))
-write_csv(agg_model, "./../OUT/trans_vs_stab_only_model.csv")
+write_csv(agg_model, "./../OUT/process/trans_vs_stab_only_model.csv")
 
 # GCM only
 agg_model <- 
@@ -102,7 +102,7 @@ non_agg %>% group_by(indice, gcm) %>% summarise(ave_cen_neg  = mean(cen_neg, na.
                                                 ave_cen_pos2 = mean(cen_pos2, na.rm = TRUE),
                                                 sd_cen_neg2  = sd(cen_neg2, na.rm = TRUE),
                                                 sd_cen_pos2  = sd(cen_pos2, na.rm = TRUE))
-write_csv(agg_model, "./../OUT/trans_vs_stab_only_gcm.csv")
+write_csv(agg_model, "./../OUT/process/trans_vs_stab_only_gcm.csv")
 
 #### spatial distribution
 ## two things to look at:
@@ -124,19 +124,19 @@ a$lon <- rep(seq(-179.75, by = 0.5, length.out = 720), times = 360) ; a$lat <- r
 #g + geom_tile(aes(x = lon, y = lat, fill = n_neg))
 
 # save independaently
-write_csv(a, "./../OUT/grid_cells_max.csv")
+write_csv(a, "./../OUT/process/grid_cells_max.csv")
 
 a <- grid_cell %>% filter(indice == "min")
 a$lon <- rep(seq(-179.75, by = 0.5, length.out = 720), times = 360) ; a$lat <- rep(seq(89.75, by = -0.5, length.out = 360), each = 720)
-write_csv(a, "./../OUT/grid_cells_min.csv")
+write_csv(a, "./../OUT/process/grid_cells_min.csv")
 
 a <- grid_cell %>% filter(indice == "p05")
 a$lon <- rep(seq(-179.75, by = 0.5, length.out = 720), times = 360) ; a$lat <- rep(seq(89.75, by = -0.5, length.out = 360), each = 720)
-write_csv(a, "./../OUT/grid_cells_p05.csv")
+write_csv(a, "./../OUT/process/grid_cells_p05.csv")
 
 a <- grid_cell %>% filter(indice == "p95")
 a$lon <- rep(seq(-179.75, by = 0.5, length.out = 720), times = 360) ; a$lat <- rep(seq(89.75, by = -0.5, length.out = 360), each = 720)
-write_csv(a, "./../OUT/grid_cells_p95.csv")
+write_csv(a, "./../OUT/process/grid_cells_p95.csv")
 
 
 ## additional analysis to distinguish patterns
@@ -148,7 +148,7 @@ agg_data %>% group_by(id, indice, gcm) %>% summarise(n = n(),
                                                 n_neg = sum(to_save < 0.05, na.rm = TRUE),
                                                 n_sup2 = sum(stat <= hgh & stat >= low , na.rm = TRUE),
                                                 n_neg2 = sum(stat > hgh | stat < low, na.rm = TRUE))
-write_csv(grid_cell, "./../OUT/grid_cells_gcms_all_ind.csv")
+write_csv(grid_cell, "./../OUT/process/grid_cells_gcms_all_ind.csv")
 
 # models
 grid_cell <-
@@ -158,4 +158,4 @@ agg_data %>% group_by(id, indice, model) %>% summarise(n = n(),
                                                 n_neg = sum(to_save < 0.05, na.rm = TRUE),
                                                 n_sup2 = sum(stat <= hgh & stat >= low , na.rm = TRUE),
                                                 n_neg2 = sum(stat > hgh | stat < low, na.rm = TRUE))
-write_csv(grid_cell, "./../OUT/grid_cells_models_all_ind.csv")
+write_csv(grid_cell, "./../OUT/process/grid_cells_models_all_ind.csv")
