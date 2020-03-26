@@ -43,13 +43,16 @@ for (sec in 1:8) {
         # get the proper files
         for (id in c("max", "min", "p05", "p95")) {
           temp <- read_csv(paste0("/data01/julien/projects/extreme_trans_stab/OUT/", m, gcms, "picontrol_",
-                                  period1, "_picontrol_", period2, "_", id, ".csv"), col_types = cols(to_save = col_double()))
+                                  period1, "_picontrol_", period2, "_", id, ".csv"), col_types = cols(to_save = col_double(),
+                                                                                                      stat  = col_double(),
+                                                                                                      low   = col_double(),
+                                                                                                      hgh   = col_double()))
           temp$id     <- seq(1,259200)
           temp$indice <- id
           temp$model  <- m
           temp$period <- pi
           temp$gcm    <- gcms
-          temp <- temp[sections[sec]:sections[(sec+1)], ] ## keep only subset to save memmory
+          temp <- temp[(sections[sec]+1):sections[(sec+1)], ] ## keep only subset to save memmory
 
 
           if (gcms == "hadgem2-es_" & m == "cwatm_" & id == "max" & pi == "pi12") {
@@ -65,15 +68,20 @@ for (sec in 1:8) {
   rm(temp)
   # analyis start, here no aggregation yet
   non_agg <- 
-    agg_data %>% group_by(model, gcm, indice, period) %>% summarise(n    = n(),
-                                                          n_pos = sum(to_save >= 0.05, na.rm = TRUE),
-                                                          n_na  = sum(is.na(to_save)))
+    agg_data %>% group_by(model, gcm, indice, period) %>% summarise(n     = n(),
+                                                                  n_pos  = sum(to_save <= 0.05, na.rm = TRUE),
+                                                                  n_na   = sum(is.na(to_save)),
+                                                                  n_pos2 = sum(stat < low | stat > hgh, na.rm = TRUE))
   non_agg$n_neg    <- (non_agg$n - non_agg$n_na) - non_agg$n_pos
   non_agg$cen_neg  <- non_agg$n_neg / (non_agg$n - non_agg$n_na) * 100
   non_agg$cen_pos  <- non_agg$n_pos / (non_agg$n - non_agg$n_na) * 100
+  non_agg$n_neg2   <- (non_agg$n - non_agg$n_na) - non_agg$n_pos2
+  non_agg$cen_neg2 <- non_agg$n_neg2 / (non_agg$n - non_agg$n_na) * 100
+  non_agg$cen_pos2 <- non_agg$n_pos2 / (non_agg$n - non_agg$n_na) * 100
 
+  non_agg
 
   # save and clean
-  write_csv(non_agg, paste0("./../OUT/picontrol_nonaggr_reg_", sec, ".csv"))
+  write_csv(non_agg, paste0("./../OUT/process/picontrol_nonaggr_reg_", sec, ".csv"))
   rm(non_agg)
 }  # regions
