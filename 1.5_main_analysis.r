@@ -14,8 +14,6 @@ args = commandArgs(trailingOnly = TRUE)
 # 3) Read file for second period
 # 4) Compute extreme indices for second period
 # 5) perform t test > write out
-# 6) also perform gumbel fitting and extract parameters
-# 7) 
 
 ## CC inputs
 if (length(args) != 9) {
@@ -74,6 +72,7 @@ for (EXP in EXPERIMENTS) {
         }
         
         close(f_write)
+        outputs[[which(i == c("max", "p05", "min", "p95"))]] <- apply(outputs[[which(i == c("max", "p05", "min", "p95"))]], 2, function(x) {ifelse(is.finite(x),x , NA)})
       }
       rm(i) ; rm(j) ; rm(f_write)
       next
@@ -90,6 +89,7 @@ for (EXP in EXPERIMENTS) {
         }
         
         close(f_write)
+        outputs[[(4+which(i == c("max", "p05", "min", "p95")))]] <- apply(outputs[[(4+which(i == c("max", "p05", "min", "p95")))]], 2, function(x) {ifelse(is.finite(x),x , NA)})
       }
       rm(i) ; rm(j) ; rm(f_write)
       next
@@ -190,14 +190,14 @@ for (EXP in EXPERIMENTS) {
     for (i in c("max", "p05", "min", "p95")) {
       f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
                              EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_", i, ".bin"), open = "wb")
-      writeBin(as.vector(t(outputs[[which(i %in% c("max", "p05", "min", "p95"))]])), f_write, size = 4, endian = "little")
+      writeBin(as.vector(t(outputs[[which(i == c("max", "p05", "min", "p95"))]])), f_write, size = 4, endian = "little")
       close(f_write)
     }
   } else {
     for (i in c("max", "p05", "min", "p95")) {
       f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
                              EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_", i, ".bin"), open = "wb")
-      writeBin(as.vector(t(outputs[[(4+which(i %in% c("max", "p05", "min", "p95")))]])), f_write, size = 4, endian = "little")
+      writeBin(as.vector(t(outputs[[(4+which(i == c("max", "p05", "min", "p95")))]])), f_write, size = 4, endian = "little")
       close(f_write)
     }    
   }

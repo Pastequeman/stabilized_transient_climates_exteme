@@ -71,8 +71,8 @@ for (EXP in EXPERIMENTS) {
         for (j in 1:30) {
           outputs[[which(i == c("max", "p05", "min", "p95"))]][j,] <- readBin(f_write, size = 4, what = "numeric", n = 259200, endian = "little")
         }
-
         close(f_write)
+        outputs[[which(i == c("max", "p05", "min", "p95"))]] <- apply(outputs[[which(i == c("max", "p05", "min", "p95"))]], 2, function(x) {ifelse(is.finite(x),x , NA)})
       }
       rm(i) ; rm(j) ; rm(f_write)
       next
@@ -80,22 +80,21 @@ for (EXP in EXPERIMENTS) {
   } else {
     if (file.exists(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
                              EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_", "max.bin"))) {
-            # load data and next
+      # load data and next
       for (i in c("max", "p05", "min", "p95")) {
         f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
                                EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_", i, ".bin"), open = "rb")
         for (j in 1:30) {
           outputs[[(4+which(i == c("max", "p05", "min", "p95")))]][j,] <- readBin(f_write, size = 4, what = "numeric", n = 259200, endian = "little")
         }
-
         close(f_write)
+        outputs[[(4+which(i == c("max", "p05", "min", "p95")))]] <- apply(outputs[[(4+which(i == c("max", "p05", "min", "p95")))]], 2, function(x) {ifelse(is.finite(x),x , NA)})
       }
       rm(i) ; rm(j) ; rm(f_write)
       next
     }    
   }
 
-  #count <- 1
   cc    <- 0
   PP    <- get(paste0("PERIOD_", PERIOD))
   temp  <- matrix(data = 0, nrow = 30, ncol = 259200)
@@ -190,14 +189,14 @@ for (EXP in EXPERIMENTS) {
     for (i in c("max", "p05", "min", "p95")) {
       f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
                              EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_", i, ".bin"), open = "wb")
-      writeBin(as.vector(t(outputs[[which(i %in% c("max", "p05", "min", "p95"))]])), f_write, size = 4, endian = "little")
+      writeBin(as.vector(t(outputs[[which(i == c("max", "p05", "min", "p95"))]])), f_write, size = 4, endian = "little")
       close(f_write)
     }
   } else {
     for (i in c("max", "p05", "min", "p95")) {
       f_write <- file(paste0("/data01/julien/projects/extreme_trans_stab/OUT/indice/", casefold(MODEL), "_", GCM, "_",
                              EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_", i, ".bin"), open = "wb")
-      writeBin(as.vector(t(outputs[[(4+which(i %in% c("max", "p05", "min", "p95")))]])), f_write, size = 4, endian = "little")
+      writeBin(as.vector(t(outputs[[(4+which(i == c("max", "p05", "min", "p95")))]])), f_write, size = 4, endian = "little")
       close(f_write)
     }    
   }
@@ -246,7 +245,8 @@ for (i in 1:8) {
   if (i %in% c(1, 2, 5, 6)) {
     outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(x, na.last = TRUE))    
   } else {
-    outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(-x, na.last = TRUE))
+    outputs[[i]] <- outputs[[i]] * -1
+    outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(-x, decreasing = TRUE, na.last = TRUE))
   }
 
   # fit L-moment
@@ -260,14 +260,14 @@ for (i in 1:8) {
   Y100_ext   <- epsilon - alpha * log(-log(1 - 1/100))
   # save
   if (i < 5) {
-    write_csv(data.frame(alpha = alpha,espilon = epsilon,y100 = Y100_ext),
+    write_csv(data.frame(alpha = alpha, espilon = epsilon, y100 = Y100_ext),
               paste0("/data01/julien/projects/extreme_trans_stab/OUT/gumbel/", casefold(MODEL), "_", GCM, "_",
                      EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_",
-                     out_var[i], ".csv"))      
+                     out_var[i], ".csv"))
   } else {
-      write_csv(data.frame(alpha = alpha,espilon = epsilon,y100 = Y100_ext),
+      write_csv(data.frame(alpha = alpha, espilon = epsilon, y100 = Y100_ext),
             paste0("/data01/julien/projects/extreme_trans_stab/OUT/gumbel/", casefold(MODEL), "_", GCM, "_",
                    EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_",
-                   out_var[i], ".csv"))  
+                   out_var[i], ".csv"))
   }
 }
