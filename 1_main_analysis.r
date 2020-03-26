@@ -18,10 +18,10 @@ args = commandArgs(trailingOnly = TRUE)
 ## CC inputs
 if (length(args) != 9) {
   stop("Wrong nb of argument:\n
-           MODEL -> CLM45 / cwatm
-           GCM   -> hadgem2-es ipsl-cm5a-lr miroc5
+           MODEL -> CLM45 / cwatm / h08 / watergap2 / pcr-globwb / lpjml / matsiro
+           GCM   -> hadgem2-es / ipsl-cm5a-lr / miroc5
            EXP1  -> hist / picontrol / rcp26 / rcp60
-           EXP2 -> hist / picontrol / rcp26 / rcp60
+           EXP2  -> hist / picontrol / rcp26 / rcp60
            period1 -> YYYY YYYY
            period2  -> YYYY YYYY
            PERMUTATION -> yes/no")
@@ -219,7 +219,7 @@ for (i in 1:4) {
       picked <- sample(seq(1:60), 30)
       #save it
       estimates[k,] <- sapply(1:ncol(pooled), function(j) { if ( sum(is.na(pooled[picked,j])) > 25 | sum(is.na(pooled[-picked,j])) > 25) {NA}
-        else {unname(ks.test(pooled[picked,j], pooled[-picked,j])$statistic)}})  
+        else {unname(ks.test(pooled[picked,j], pooled[-picked,j])$statistic)}})
     } 
     to_save <- as.data.frame(to_save)
     to_save$stat <- to_save2
@@ -241,12 +241,11 @@ rm(to_save) ; rm(pooled) ; rm(estimates) ; rm(to_save2)
 
 #### Gumbel fitting
 for (i in 1:8) {
-  # carefull. low flow have to sort -x !
   if (i %in% c(1, 2, 5, 6)) {
     outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(x, na.last = TRUE))    
   } else {
     outputs[[i]] <- outputs[[i]] * -1
-    outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(-x, decreasing = TRUE, na.last = TRUE))
+    outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(x, decreasing = TRUE, na.last = TRUE))
   }
 
   # fit L-moment
