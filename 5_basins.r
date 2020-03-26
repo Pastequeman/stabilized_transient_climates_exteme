@@ -56,8 +56,8 @@ t1 <- ind1 %>% group_by(indice, gcm, num) %>% summarise(n = n())
 t2 <- ind2 %>% group_by(indice, gcm, num) %>% summarise(n = n())
 
 ## keep only basin/river with at least 40 grid-cell marked
-keep1 <- t1 %>% filter(n >= 40)
-keep2 <- t2 %>% filter(n >= 40)
+keep1 <- t1 %>% filter(n >= 30)
+keep2 <- t2 %>% filter(n >= 30)
 # example how to keep relevant data
 #keep1 %>% ungroup() %>% filter(indice == "max") %>% select(n)
 #keep2 %>% ungroup() %>% filter(indice == "max") %>% select(n)
