@@ -76,6 +76,6 @@ for (sec in 1:8) {
 
 
   # save and clean
-  write_csv(non_agg, paste0("./../OUT/process/picontrol_nonaggr_reg_", sec, "_tail.csv"))
+  write_csv(non_agg, paste0("./../OUT/pi_process/picontrol_nonaggr_reg_", sec, "_tail.csv"))
   rm(non_agg)
 }  # regions

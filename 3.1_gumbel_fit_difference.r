@@ -18,13 +18,13 @@ args = commandArgs(trailingOnly = TRUE)
 ## CC inputs
 if (length(args) != 9) {
   stop("Wrong nb of argument:\n
-           MODEL -> CLM45 / cwatm
-           GCM   -> hadgem2-es ipsl-cm5a-lr miroc5
+           MODEL -> CLM45 / cwatm / h08 / watergap2 / lpjml / pcr-globwb / matsiro
+           GCM   -> hadgem2-es / ipsl-cm5a-lr / miroc5
            EXP1  -> hist / picontrol / rcp26 / rcp60
            EXP2 -> hist / picontrol / rcp26 / rcp60
            period1 -> YYYY YYYY
            period2  -> YYYY YYYY
-           PERMUTATION -> yes/no")
+           PERMUTATION -> yes / no")
 } else {
   MODEL       <- args[1]                           # Other options:
   GCM         <- args[2]                           # possible choice: hadgem2-es, 
@@ -203,9 +203,9 @@ for (EXP in EXPERIMENTS) {
   }
 
 }  # experiment loop
-rm(cc) ; rm(temp) ; rm(PP) ; rm(PERIOD) ; rm(i) ; rm(f_write)
-rm(years) ; rm(leap_years) ; rm(yrs_seq) ; rm(ini)
-rm(folder) ; rm(discharge) ; rm(days) ; rm(adj) ; rm(per_str) ; rm(soc)
+#rm(cc) ; rm(temp) ; rm(PP) ; rm(PERIOD) ; rm(i) ; rm(f_write)
+#rm(years) ; rm(leap_years) ; rm(yrs_seq) ; rm(ini)
+#rm(folder) ; rm(discharge) ; rm(days) ; rm(adj) ; rm(per_str) ; rm(soc)
 
 
 ##### part 2: inference and fitting #####    ## the 30 extrema data for both sets are loaded
@@ -266,7 +266,7 @@ for (i in 1:4) {
     estimates_epsilon <- matrix(nrow = perm_it, ncol = 259200)
     estimates_y100    <- matrix(nrow = perm_it, ncol = 259200)
     for (k in 1:perm_it) {
-      print(k) ## DEBUG
+      #print(k) ## DEBUG
       picked <- sample(seq(1:60), 30)
 
       ## fit L-moment for both samples

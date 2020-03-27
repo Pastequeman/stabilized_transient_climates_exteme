@@ -202,9 +202,9 @@ for (EXP in EXPERIMENTS) {
   }
 
 }  # experiment loop
-rm(cc) ; rm(temp) ; rm(PP) ; rm(PERIOD) ; rm(i) ; rm(f_write)
-rm(years) ; rm(leap_years) ; rm(yrs_seq) ; rm(ini)
-rm(folder) ; rm(discharge) ; rm(days) ; rm(adj) ; rm(per_str) ; rm(soc)
+#rm(cc) ; rm(temp) ; rm(PP) ; rm(PERIOD) ; rm(i) ; rm(f_write)
+#rm(years) ; rm(leap_years) ; rm(yrs_seq) ; rm(ini)
+#rm(folder) ; rm(discharge) ; rm(days) ; rm(adj) ; rm(per_str) ; rm(soc)
 ##### part 2: inference and fitting #####    ## the 30 extrema data for both sets are loaded
 for (i in 1:4) {
   to_save <- sapply(1:ncol(outputs[[i]]), function(j) { if ( sum(is.na(outputs[[i]][,j])) > 25 | sum(is.na(outputs[[(i+4)]][,j])) > 25) {NA} else {unname(ks.test(outputs[[i]][,j], outputs[[(i+4)]][,j])$p.value)} })
@@ -240,33 +240,35 @@ rm(to_save) ; rm(pooled) ; rm(estimates) ; rm(to_save2)
 
 
 #### Gumbel fitting
-for (i in 1:8) {
-  if (i %in% c(1, 2, 5, 6)) {
-    outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(x, na.last = TRUE))    
-  } else {
-    outputs[[i]] <- outputs[[i]] * -1
-    outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(x, decreasing = TRUE, na.last = TRUE))
-  }
-
-  # fit L-moment
-  M1 <- apply(outputs[[i]], 2, function(x) if (sum(is.na(x)) >= 25) {NA} else {mean(x, na.rm = TRUE)})
-  M2 <- apply(outputs[[i]], 2, function(x) if (sum(is.na(x)) >= 25) {NA} else {1 / 30 * sum((seq(1, 30, 1) - 1) / (30 - 1) * x)})
-  L1 <- M1
-  L2 <- 2 * M2 - M1
-  
-  alpha   <- L2 / log(2)
-  epsilon <- L1 - alpha * 0.57721
-  Y100_ext   <- epsilon - alpha * log(-log(1 - 1/100))
-  # save
-  if (i < 5) {
-    write_csv(data.frame(alpha = alpha, espilon = epsilon, y100 = Y100_ext),
-              paste0("/data01/julien/projects/extreme_trans_stab/OUT/gumbel/", casefold(MODEL), "_", GCM, "_",
+if (EXPERIMENTS[1] == "rcp26") {
+  for (i in 1:8) {
+    if (i %in% c(1, 2, 5, 6)) {
+      outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(x, na.last = TRUE))    
+    } else {
+      outputs[[i]] <- outputs[[i]] * -1
+      outputs[[i]] <- apply(outputs[[i]], 2, function(x) sort(x, decreasing = TRUE, na.last = TRUE))
+    }
+    
+    # fit L-moment
+    M1 <- apply(outputs[[i]], 2, function(x) if (sum(is.na(x)) >= 25) {NA} else {mean(x, na.rm = TRUE)})
+    M2 <- apply(outputs[[i]], 2, function(x) if (sum(is.na(x)) >= 25) {NA} else {1 / 30 * sum((seq(1, 30, 1) - 1) / (30 - 1) * x)})
+    L1 <- M1
+    L2 <- 2 * M2 - M1
+    
+    alpha   <- L2 / log(2)
+    epsilon <- L1 - alpha * 0.57721
+    Y100_ext   <- epsilon - alpha * log(-log(1 - 1/100))
+    # save
+    if (i < 5) {
+      write_csv(data.frame(alpha = alpha, espilon = epsilon, y100 = Y100_ext),
+                paste0("/data01/julien/projects/extreme_trans_stab/OUT/gumbel/", casefold(MODEL), "_", GCM, "_",
                      EXPERIMENTS[1], "_", as.character(PERIOD_1[1]), "-", as.character(PERIOD_1[2]), "_",
                      out_var[i], ".csv"))
-  } else {
+    } else {
       write_csv(data.frame(alpha = alpha, espilon = epsilon, y100 = Y100_ext),
-            paste0("/data01/julien/projects/extreme_trans_stab/OUT/gumbel/", casefold(MODEL), "_", GCM, "_",
-                   EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_",
-                   out_var[i], ".csv"))
+                paste0("/data01/julien/projects/extreme_trans_stab/OUT/gumbel/", casefold(MODEL), "_", GCM, "_",
+                       EXPERIMENTS[2], "_", as.character(PERIOD_2[1]), "-", as.character(PERIOD_2[2]), "_",
+                       out_var[i], ".csv"))
+    }
   }
 }
