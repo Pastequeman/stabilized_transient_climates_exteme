@@ -130,12 +130,23 @@ rm(y) ; rm(ids)
 #### part 2: process the data to get uncertainty due to pi-control
 # for all gcm + L + models + inices
 unc <- 
-pi_data %>% group_by(L, num, seq, gcm, ind) %>% summarise(n   = n(),
+pi_data %>% group_by(id, num, seq, gcm, ind) %>% summarise(n   = n(),
                                                           low = quantile(flow, 0.025, na.rm = TRUE),
                                                           hgt = quantile(flow, 0.975, na.rm = TRUE),
                                                           med = median(flow, na.rm = TRUE),
                                                           ave = mean(flow, na.rm = TRUE))
 
+# save 
+write_csv(unc, "../OUT/pi_process/basins_uncertainty.csv")
+
+unc <- 
+pi_data %>% group_by(id, num, seq, ind) %>% summarise(n   = n(),
+                                                          low = quantile(flow, 0.025, na.rm = TRUE),
+                                                          hgt = quantile(flow, 0.975, na.rm = TRUE),
+                                                          med = median(flow, na.rm = TRUE),
+                                                          ave = mean(flow, na.rm = TRUE))
+# save 
+write_csv(unc, "../OUT/pi_process/basins_uncertainty_agg.csv")
 
 ## for these location, read the indice files for all models / GCM and 2 period
 for (m in c("cwatm_", "matsiro_", "clm45_", "lpjml_", "pcr-globwb_", "watergap2_", "h08_")) { # add more as they come
@@ -184,9 +195,21 @@ rm(temp) ; rm(file_in1) ; rm(file_in2)
 
 ## process the data to keep gcm, L, indice...
 gcm_data <- 
-all_data %>% group_by(L, num, seq, ind, gcm, year) %>% summarise(ave_flow = mean(flow, na.rm = TRUE),
+all_data %>% group_by(id, num, seq, ind, gcm, year) %>% summarise(ave_flow = mean(flow, na.rm = TRUE),
                                                                  low_flow = quantile(flow, 0.025, na.rm = TRUE),
                                                                  hgt_flow = quantile(flow, 0.025, na.rm = TRUE))
+## Save
+write_csv(gcm_data, "../OUT/process/basins_fata.csv")
+
+
+## merge the two dataset after
+all_data$period <- "future"
+pi_data$period  <- "pi-control"
+pi_data_v2 <- pi_data
+pi_data_v2$gcm <- "control"
+
+all_data <- rbind(all_data, pi_data_v2)
+write_csv(all_data, "../OUT/process/all_data_basins.csv")
 
 ## test
 library("ggplot2")
@@ -195,3 +218,16 @@ g <- ggplot()
 g + geom_rect(data = unc %>% filter(L == 33619, ind == "min"), aes(xmin = 1, xmax = 30, ymin = low, ymax = hgt), alpha = 0.2, fill = "red") +
     geom_line(data = gcm_data %>% filter(L == 33619, ind == "min"), aes(x = year, y = ave_flow, color = gcm)) + 
     geom_line(data = gcm_data %>% filter(L == 33619, ind == "p95"), aes(x = year, y = ave_flow, color = gcm))
+
+
+# move to boxplot styles > this is way better
+all_data
+
+g <- ggplot(all_data %>% filter(indice == "max", id == 81204, ind == "max"))
+g + geom_boxplot(aes(x = gcm, y = flow)) #+
+  coord_cartesian(ylim = c(-10, 10))
+
+
+g <- ggplot(all_data %>% filter(indice == "max", id == 158817, ind == "max"))
+g + geom_boxplot(aes(x = gcm, y = flow)) +
+  coord_cartesian(ylim = c(-200, 200))
