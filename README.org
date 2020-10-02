@@ -27,8 +27,6 @@ This script first extract, yearly, the extreme streamflow for two periods for a 
 
 *** Caveats
 - Largely comply with Lintr
-
-
 ** 1.1_pi_control.sh
 *** General purpose
 A simple shell script that launches the previous script (1.0) for a given picontrol simulation.
@@ -69,6 +67,31 @@ Identical as the script above but here only for reading pi-control simulations
 
 *** Caveats
 - Largely comply with Lintr
+
+** 2.2_all_combinations_ghm-gcm.r
+*** General purpose
+This script evaluate the consensus toward significant difference in extreme streamflow amon an ensemble for all possible ensemble possible. The total number of combination is: 8^6-1 = 262143.
+- 6 GHMs
+- 8 choices for every of them:
+  - not used
+  - hadgem2-es
+  - ipsl-cm5a-lr
+  - miroc5
+  - hadgem2-es and ipsl-cm5-lr
+  - hadgem2-es and miroc5
+  - ipsl-cm5-lr and miroc5
+  - hadgem2-es and ipsl-cm5-lr and miroc5
+A single combination need to be remove as it consist of the combination where all gcm are turned off.
+
+*** I/O
+- Inputs: 
+  - A single csv file which indicates the cells where the extreme streamflow where significantly different between the transient and quasi-equilibrium climates
+  - For all ghm and gcm
+    
+- Outputs: a csv file called "all_combinations.csv". It contains the fraction of grid cell where at least 66% of the ensemble agree that there are significant difference in extreme streamflow.
+
+*** Caveats
+- Comply with Lintr
 
 ** 3.0_basin.r
 *** General purpose
@@ -119,7 +142,7 @@ Report the fraction of zero flow for low flow and the cells which slope of the Q
 *** I/O
 - Inputs: The csv files created in script 4.0
 
-- Outputs: Two scv files, one for low streamflo, the other for high flow.
+- Outputs: Two scv files, one for low streamflow, the other for high streamflow.
 
 *** Caveats
 - Largely comply with Lintr
