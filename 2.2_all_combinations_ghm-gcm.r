@@ -44,13 +44,13 @@ model_to_include <- c("cwatm_", "h08_", "lpjml_", "matsiro_",
 gcm_to_include <- c("hadgem2-es_", "ipsl-cm5a-lr_", "miroc5_")
 
 # store outputs here
-robustness_combination <- tibble(cases   = integer((8^6 - 1)),
-                                 low_all = double((8^6 - 1)),
-                                 low_fil = double((8^6 - 1)),
-                                 hgh_all = double((8^6 - 1)),
-                                 hgh_fil = double((8^6 - 1)),
-                                 n_model = integer((8^6 - 1)),
-                                 n_ghm   = integer((8^6 - 1)))
+robustness_combination <- tibble(cases   = integer(1),
+                                 low_all = double(1),
+                                 low_fil = double(1),
+                                 hgh_all = double(1),
+                                 hgh_fil = double(1),
+                                 n_model = integer(1),
+                                 n_ghm   = integer(1))
 
 # function taht will report the gcms involve for all ghm
 involved_gcm <- function(x) {
@@ -85,10 +85,10 @@ nb_ghm <- function(x) {
 # main job and loop
 for (i in 2:nrow(perm)) {
   print(i)
-  robustness_combination[(i - 1), 1] <- i                 # iteration
-  robustness_combination[(i - 1), 6] <- sum(perm[i, ])    # nb of models
-  robustness_combination[(i - 1), 7] <- sum(sapply(perm[i, ],
-                                                   nb_ghm))    # nb of ghm
+  robustness_combination[1, 1] <- i                 # iteration
+  robustness_combination[1, 6] <- sum(perm[i, ])    # nb of models
+  robustness_combination[1, 7] <- sum(sapply(perm[i, ],
+                                             nb_ghm))    # nb of ghm
 
   # the subsample, according to  perm
   # low streamflow
@@ -127,7 +127,7 @@ for (i in 2:nrow(perm)) {
 
   ## evaluate consensus and save it
   # 1
-  robustness_combination[(i - 1), 2] <-
+  robustness_combination[1, 2] <-
     submodels_low %>%
     group_by(id, Cls, n, tot_signi) %>%
     tally(name = "tot") %>%
@@ -140,7 +140,7 @@ for (i in 2:nrow(perm)) {
     unname()
 
   # 2
-  robustness_combination[(i - 1), 3] <-
+  robustness_combination[1, 3] <-
     submodels_low %>%
     filter(!Cls %in% c("BWh", "BWk")) %>%
     group_by(id, Cls, n, tot_signi) %>%
@@ -154,7 +154,7 @@ for (i in 2:nrow(perm)) {
     unname()
 
   # 3
-  robustness_combination[(i - 1), 4] <-
+  robustness_combination[1, 4] <-
     submodels_hgh %>%
     group_by(id, Cls, n, tot_signi) %>%
     tally(name = "tot") %>%
@@ -167,7 +167,7 @@ for (i in 2:nrow(perm)) {
     unname()
 
   # 4
-  robustness_combination[(i - 1), 5] <-
+  robustness_combination[1, 5] <-
     submodels_hgh %>%
     filter(!Cls %in% c("BWh", "BWk")) %>%
     group_by(id, Cls, n, tot_signi) %>%
@@ -179,7 +179,8 @@ for (i in 2:nrow(perm)) {
               frac = sum(n) / mean(tot_grid) * 100) %>%
     select(frac) %>%
     unname()
-}
 
-# write
-write_csv(robustness_combination, "./../OUT/all_combinations.csv")
+  # write
+  write_csv(robustness_combination, "./../OUT/all_combinations.csv",
+            append = TRUE)
+}

@@ -148,4 +148,38 @@ Report the fraction of zero flow for low flow and the cells which slope of the Q
 - Largely comply with Lintr
 
 * Tables and Figures
+** 0_histogram.r
+*** General purpose
+To create the historgrams in Fig. 1
 
+*** Caveats
+- Largely comply with Lintr
+
+** 0_temperature_trend.r
+*** General purpose
+Create Figure 1 and identify the transient and quasi-equilibrium periods
+
+*** I/O
+- Inputs
+
+- Outputs: Figure 1 (a and b)
+
+*** Caveats
+- Largely comply with Lintr
+
+** 1_combined_maps.r
+*** General purpose
+*** I/O
+*** Caveats
+
+** 1_maps_qq_and_0_flows.r
+*** General purpose
+*** I/O
+*** Caveats
+
+** 1.5_
+*** General purpose
+*** I/O
+*** Caveats
+
+** 
