@@ -33,7 +33,7 @@ read_csv("./../IN/all_main_data.csv",
                           )
          )
 
-##### Jobs #####
+# Jobs ########################################################################
 # all possible permutation
 perm <- gtools::permutations(8, 6, c(0, 1, 2, 3, 4, 5, 6, 7),
                              repeats.allowed = TRUE)
@@ -74,6 +74,18 @@ involved_gcm <- function(x) {
 }
 
 # return the nb of ghm
+nb_gcm <- function(x) {
+  if (x == 0) {
+    return(0)
+  } else if (x %in% c(1, 2, 3)) {
+    return(1)
+  } else if (x %in% c(4, 5, 6)) {
+    return(2)
+  } else {
+    return(3)
+  }
+}
+
 nb_ghm <- function(x) {
   if (x != 0) {
     return(1)
