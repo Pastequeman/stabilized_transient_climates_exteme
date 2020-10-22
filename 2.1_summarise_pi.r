@@ -7,6 +7,7 @@ args <- commandArgs(trailingOnly = TRUE)
 ## history
 # 15/06/2020: added support for bootstrap
 # 08/09/2020: implemented Wilk and clean-up
+
 ## Libraries
 library("readr")
 library("tibble")
@@ -24,20 +25,21 @@ for (models in c("h08", "watergap2", "lpjml", "matsiro",
     if (gcms %in% c("miroc5", "ipsl-cm5a-lr") & models == "clm45") {
       next
     }
+
     # list all the file concerned
     file <- list.files("./../OUT/", pattern = paste0("^", models, "_",
                                                      gcms, "_picontrol"))
     file_boot <- list.files("./../OUT/pi_process",
                             pattern = paste0("^", models,
                                              "_", gcms, "_picontrol"))
-    #
+
     for (ind in c("max", "p05", "min", "p95")) {
       sub_file <- file[grep(pattern = ind, file)]
       sub_file_boot <- file_boot[grep(pattern = ind, file_boot)]
       temp_matrix <- matrix(data = 0, nrow = 259200,
                             ncol = (length(sub_file)
                               + 100 * length(sub_file_boot)))
-      #
+
       # Step 1: Default files
       for (i in seq_len(length(sub_file))) {
         temp <- read_csv(paste0("./../OUT/", sub_file[i]),
@@ -47,7 +49,7 @@ for (models in c("h08", "watergap2", "lpjml", "matsiro",
                                           hgh     = col_double()))
         temp_matrix[, i] <- temp$to_save
       }
-      #
+
       # Step 2: bootstrap data
       for (i in seq_len(length(sub_file_boot))) {
         file_to_r <- file(paste0("./../OUT/pi_process/",
@@ -59,7 +61,7 @@ for (models in c("h08", "watergap2", "lpjml", "matsiro",
         }
         close(file_to_r)
       }
-      #
+
       # done filling the matrix for that combination of model, gcm, and indice
       low <- apply(temp_matrix[, seq_len(length(sub_file))], 1,
                    function(x) quantile(x, 0.025, na.rm = TRUE))
@@ -70,22 +72,40 @@ for (models in c("h08", "watergap2", "lpjml", "matsiro",
                      low  = low,
                      hgh  = hgh,
                      area = t)
+
       ## Wilk 2016
       # recompute the FDR for every col of the matrix
       # then evaluate global significance
       # report finaly the 95 percentage
       # total land surface:
       tot_lnd_s <- sum(temp[!is.na(temp_matrix[, i]), ]$area)
+
       for (i in seq_len(length(sub_file))) {
-        #
         temp_2 <- temp_matrix[, i]
+        l      <- seq(1, 259200)
+        sub_l  <- l[!is.na(temp_2) & temp_2 != 0]      # remove the sea
         temp_2 <- temp_2[!is.na(temp_2) & temp_2 != 0] # remove the sea
-        temp_2 <- sort(temp_2, decreasing = FALSE)
+        temp_3 <- sort(temp_2, decreasing = FALSE)
+
         # The cells where this relation is fullfill
-        cell <- which(temp_2 <= (seq(1, length(temp_2)) / length(temp_2) * 0.1))
+        cell <- which(temp_3 <= (seq(1, length(temp_3)) / length(temp_3) * 0.1))
         if (length(cell) == 0) {
           next
         }
+        # save pos cells
+        # the new crit value
+        crit <- temp_3[cell[length(cell)]]
+        # the pos cells
+        pi_count_cell <-
+        tibble(cell = sub_l[which(temp_2 <= crit)],
+               gcm  = gcms,
+               ghm  = models,
+               t_c  = 1,
+               cnt  = i)
+        write_csv(pi_count_cell,
+                  paste0("../OUT/pi_cell_", models, "_",
+                         gcms, ".csv"), append = TRUE)
+
         # Pick the max p value belonging for such cell
         sig <- (100 * sum(temp[temp_matrix[, i] < (temp_2[cell[length(cell)]]) &
                                !is.na(temp_matrix[, i]), ]$area) / tot_lnd_s)

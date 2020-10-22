@@ -52,7 +52,7 @@ robustness_combination <- tibble(cases   = integer(1),
                                  n_model = integer(1),
                                  n_ghm   = integer(1))
 
-# function taht will report the gcms involve for all ghm
+# function that will report the gcms involve for all ghm
 involved_gcm <- function(x) {
   if (x == 0) {
     return(NULL)
@@ -95,7 +95,7 @@ nb_ghm <- function(x) {
 }
 
 # main job and loop
-for (i in 2:nrow(perm)) {
+for (i in 139878:nrow(perm)) {
   print(i)
   robustness_combination[1, 1] <- i                 # iteration
   robustness_combination[1, 6] <- sum(perm[i, ])    # nb of models
@@ -193,6 +193,6 @@ for (i in 2:nrow(perm)) {
     unname()
 
   # write
-  write_csv(robustness_combination, "./../OUT/all_combinations.csv",
+  write_csv(robustness_combination, "./../OUT/all_combinations_v2.csv",
             append = TRUE)
 }
