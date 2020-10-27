@@ -104,7 +104,8 @@ for (models in c("h08", "watergap2", "lpjml", "matsiro",
                cnt  = i)
         write_csv(pi_count_cell,
                   paste0("../OUT/pi_cell_", models, "_",
-                         gcms, ".csv"), append = TRUE)
+                         gcms, "_", ind, ".csv"),
+                  append = TRUE)
 
         # Pick the max p value belonging for such cell
         sig <- (100 * sum(temp[temp_matrix[, i] < (temp_2[cell[length(cell)]]) &
